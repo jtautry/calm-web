@@ -1,0 +1,27 @@
+/* calm-web — injected at document_start */
+
+/* Kill all animations and transitions */
+*, *::before, *::after {
+  animation: none !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition: none !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Stop background videos from being a visual distraction */
+video {
+  object-fit: contain !important;
+}
+
+/* Kill parallax */
+* {
+  background-attachment: scroll !important;
+}
+
+/* Kill sticky/fixed overlays with high z-index that cover content */
+[style*="position: fixed"],
+[style*="position:fixed"] {
+  pointer-events: none;
+}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>calm-web</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 280px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      background: #f8f7f4;
+      color: #2c2c2c;
+      padding: 16px;
+    }
+    h1 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #888; margin-bottom: 16px; }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .label { font-size: 13px; }
+    .toggle {
+      appearance: none;
+      width: 40px;
+      height: 22px;
+      background: #ccc;
+      border-radius: 11px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .toggle:checked { background: #4a9d6f; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+    .toggle:checked::after { left: 20px; }
+    .divider { border: none; border-top: 1px solid #e0ddd8; margin: 12px 0; }
+    .allowlist-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .domain-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+    .domain { font-size: 12px; color: #555; }
+    .remove { background: none; border: none; color: #bbb; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+    .remove:hover { color: #e05c5c; }
+    .add-row { display: flex; gap: 6px; margin-top: 8px; }
+    .add-input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: white;
+    }
+    .add-btn {
+      background: #4a9d6f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .add-btn:hover { background: #3d8560; }
+  </style>
+</head>
+<body>
+  <h1>calm-web</h1>
+  <p class="subtitle">Low-stimulation browsing</p>
+
+  <div class="row">
+    <span class="label">Enable calm-web</span>
+    <input type="checkbox" class="toggle" id="enabled" />
+  </div>
+
+  <hr class="divider" />
+
+  <div class="allowlist-title">Allowlist (not blocked)</div>
+  <div id="allowlist"></div>
+  <div class="add-row">
+    <input type="text" class="add-input" id="new-domain" placeholder="example.com" />
+    <button class="add-btn" id="add-btn">Add</button>
+  </div>
+
+  <script type="module" src="popup.ts"></script>
+</body>
+</html>
