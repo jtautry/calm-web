@@ -14,24 +14,40 @@
       color: #2c2c2c;
       padding: 16px;
     }
-    h1 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .subtitle { font-size: 12px; color: #888; margin-bottom: 16px; }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #2c2c2c;
+      letter-spacing: -0.01em;
+    }
+    .subtitle { font-size: 12px; color: #999; margin-bottom: 16px; }
     .row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      padding: 4px 0;
     }
-    .label { font-size: 13px; }
+    .label { font-size: 13px; color: #2c2c2c; }
+    .site-hostname {
+      font-size: 12px;
+      color: #777;
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Toggle switch */
     .toggle {
       appearance: none;
+      -webkit-appearance: none;
       width: 40px;
       height: 22px;
       background: #ccc;
       border-radius: 11px;
       cursor: pointer;
       position: relative;
-      transition: background 0.2s;
+      flex-shrink: 0;
     }
     .toggle:checked { background: #4a9d6f; }
     .toggle::after {
@@ -43,34 +59,21 @@
       border-radius: 50%;
       top: 2px;
       left: 2px;
-      transition: left 0.2s;
     }
     .toggle:checked::after { left: 20px; }
-    .divider { border: none; border-top: 1px solid #e0ddd8; margin: 12px 0; }
-    .allowlist-title { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .domain-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
-    .domain { font-size: 12px; color: #555; }
-    .remove { background: none; border: none; color: #bbb; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
-    .remove:hover { color: #e05c5c; }
-    .add-row { display: flex; gap: 6px; margin-top: 8px; }
-    .add-input {
-      flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-      background: white;
-    }
-    .add-btn {
-      background: #4a9d6f;
-      color: white;
+    .divider {
       border: none;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 12px;
-      cursor: pointer;
+      border-top: 1px solid #e0ddd8;
+      margin: 12px 0;
     }
-    .add-btn:hover { background: #3d8560; }
+    #site-section {
+      transition: opacity 0.15s;
+    }
+    .site-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
   </style>
 </head>
 <body>
@@ -78,17 +81,20 @@
   <p class="subtitle">Low-stimulation browsing</p>
 
   <div class="row">
-    <span class="label">Enable calm-web</span>
-    <input type="checkbox" class="toggle" id="enabled" />
+    <span class="label">Enabled</span>
+    <input type="checkbox" class="toggle" id="global-toggle" />
   </div>
 
   <hr class="divider" />
 
-  <div class="allowlist-title">Allowlist (not blocked)</div>
-  <div id="allowlist"></div>
-  <div class="add-row">
-    <input type="text" class="add-input" id="new-domain" placeholder="example.com" />
-    <button class="add-btn" id="add-btn">Add</button>
+  <div id="site-section">
+    <div class="row">
+      <div class="site-meta">
+        <span class="label">On this site</span>
+        <span class="site-hostname" id="site-hostname"></span>
+      </div>
+      <input type="checkbox" class="toggle" id="site-toggle" />
+    </div>
   </div>
 
   <script type="module" src="popup.ts"></script>

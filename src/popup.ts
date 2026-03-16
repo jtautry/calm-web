@@ -1,55 +1,70 @@
-const CALM_STORAGE_KEY = 'calm-web-enabled'
+// calm-web popup
 
-const enabledToggle = document.getElementById('enabled') as HTMLInputElement
-const allowlistEl = document.getElementById('allowlist') as HTMLDivElement
-const newDomainInput = document.getElementById('new-domain') as HTMLInputElement
-const addBtn = document.getElementById('add-btn') as HTMLButtonElement
+const globalToggle = document.getElementById('global-toggle') as HTMLInputElement
+const siteToggle = document.getElementById('site-toggle') as HTMLInputElement
+const siteLabel = document.getElementById('site-hostname') as HTMLSpanElement
+const siteSection = document.getElementById('site-section') as HTMLDivElement
 
-let allowlist: string[] = []
+let currentHostname = ''
+let sites: Record<string, boolean> = {}
 
-function renderAllowlist(): void {
-  allowlistEl.innerHTML = ''
-  allowlist.forEach(domain => {
-    const row = document.createElement('div')
-    row.className = 'domain-row'
-    row.innerHTML = `
-      <span class="domain">${domain}</span>
-      <button class="remove" data-domain="${domain}" title="Remove">×</button>
-    `
-    row.querySelector('.remove')?.addEventListener('click', () => removeDomain(domain))
-    allowlistEl.appendChild(row)
+function updateSiteSectionOpacity(globalEnabled: boolean): void {
+  siteSection.style.opacity = globalEnabled ? '1' : '0.4'
+  siteSection.style.pointerEvents = globalEnabled ? '' : 'none'
+}
+
+// Query active tab for hostname
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  const tab = tabs[0]
+  if (tab?.url) {
+    try {
+      currentHostname = new URL(tab.url).hostname
+    } catch {
+      currentHostname = ''
+    }
+  }
+
+  // Truncate long hostnames for display
+  const displayName = currentHostname.length > 30
+    ? currentHostname.slice(0, 28) + '…'
+    : currentHostname
+
+  siteLabel.textContent = displayName || 'this site'
+
+  // Load storage
+  chrome.storage.sync.get(['enabled', 'sites'], result => {
+    const globalEnabled = result['enabled'] !== false
+    sites = result['sites'] ?? {}
+    const siteEnabled = currentHostname ? sites[currentHostname] !== false : true
+
+    globalToggle.checked = globalEnabled
+    siteToggle.checked = siteEnabled
+
+    updateSiteSectionOpacity(globalEnabled)
   })
-}
-
-function removeDomain(domain: string): void {
-  allowlist = allowlist.filter(d => d !== domain)
-  chrome.storage.sync.set({ allowlist })
-  renderAllowlist()
-}
-
-function addDomain(domain: string): void {
-  domain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
-  if (!domain || allowlist.includes(domain)) return
-  allowlist.push(domain)
-  chrome.storage.sync.set({ allowlist })
-  renderAllowlist()
-  newDomainInput.value = ''
-}
-
-// Load state
-chrome.storage.sync.get([CALM_STORAGE_KEY, 'allowlist'], result => {
-  enabledToggle.checked = result[CALM_STORAGE_KEY] !== false
-  allowlist = result['allowlist'] ?? []
-  renderAllowlist()
 })
 
-// Toggle handler
-enabledToggle.addEventListener('change', () => {
-  chrome.storage.sync.set({ [CALM_STORAGE_KEY]: enabledToggle.checked })
+// Global toggle handler
+globalToggle.addEventListener('change', () => {
+  const enabled = globalToggle.checked
+  chrome.storage.sync.set({ enabled })
+  updateSiteSectionOpacity(enabled)
 })
 
-// Add domain handler
-addBtn.addEventListener('click', () => addDomain(newDomainInput.value))
-newDomainInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') addDomain(newDomainInput.value)
+// Site toggle handler
+siteToggle.addEventListener('change', () => {
+  if (!currentHostname) return
+  const enabled = siteToggle.checked
+
+  if (enabled) {
+    // Remove from sites map (default is enabled)
+    delete sites[currentHostname]
+  } else {
+    sites[currentHostname] = false
+  }
+
+  chrome.storage.sync.set({ sites })
+
+  // Notify background to forward to content script
+  chrome.runtime.sendMessage({ type: 'set-site', hostname: currentHostname, enabled })
 })

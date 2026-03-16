@@ -1,7 +1,10 @@
 /* calm-web — injected at document_start */
+/* All rules scoped to .calm-web-active on <html> so per-site disable works */
 
 /* Kill all animations and transitions */
-*, *::before, *::after {
+.calm-web-active *,
+.calm-web-active *::before,
+.calm-web-active *::after {
   animation: none !important;
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
@@ -11,17 +14,30 @@
 }
 
 /* Stop background videos from being a visual distraction */
-video {
+.calm-web-active video {
   object-fit: contain !important;
 }
 
 /* Kill parallax */
-* {
+.calm-web-active * {
   background-attachment: scroll !important;
 }
 
-/* Kill sticky/fixed overlays with high z-index that cover content */
-[style*="position: fixed"],
-[style*="position:fixed"] {
-  pointer-events: none;
+/* Hide cookie / consent banners */
+.calm-web-active #onetrust-banner-sdk,
+.calm-web-active #onetrust-consent-sdk,
+.calm-web-active #CybotCookiebotDialog,
+.calm-web-active #CybotCookiebotDialogBodyUnderlay,
+.calm-web-active .cc-window,
+.calm-web-active .cc-banner,
+.calm-web-active [id^="cookie-banner"],
+.calm-web-active [id^="cookie-notice"],
+.calm-web-active [id^="cookie-consent"],
+.calm-web-active [id^="gdpr"],
+.calm-web-active [class^="gdpr"],
+.calm-web-active [aria-label*="cookie" i],
+.calm-web-active [aria-label*="consent" i] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }

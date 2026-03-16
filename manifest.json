@@ -3,7 +3,7 @@
   "name": "calm-web",
   "version": "0.1.0",
   "description": "A low-stimulation browser for people with ADHD and autism. Blocks animations, autoplay, and distracting overlays.",
-  "permissions": ["activeTab", "storage", "scripting"],
+  "permissions": ["activeTab", "storage", "scripting", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/background.ts",

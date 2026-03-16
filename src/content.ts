@@ -1,9 +1,8 @@
 // calm-web content script — injected at document_start
-// CSS is injected via manifest; this handles JS-driven distractions
 
-const CALM_STORAGE_KEY = 'calm-web-enabled'
+const hostname = window.location.hostname
 
-function pauseMediaElements(root: Document | Element = document): void {
+function pauseMedia(root: Document | Element): void {
   const media = root.querySelectorAll<HTMLMediaElement>('video, audio')
   media.forEach(el => {
     el.autoplay = false
@@ -12,7 +11,7 @@ function pauseMediaElements(root: Document | Element = document): void {
   })
 }
 
-function freezeGifs(root: Document | Element = document): void {
+function freezeGifs(root: Document | Element): void {
   const imgs = root.querySelectorAll<HTMLImageElement>('img')
   imgs.forEach(img => {
     if (!img.complete || img.naturalWidth === 0) return
@@ -29,8 +28,7 @@ function freezeGifs(root: Document | Element = document): void {
   })
 }
 
-function blockNotificationPrompts(): void {
-  // Silently deny notification permission requests
+function blockNotifications(): void {
   if ('Notification' in window) {
     Object.defineProperty(Notification, 'permission', {
       get: () => 'denied',
@@ -39,43 +37,62 @@ function blockNotificationPrompts(): void {
   }
 }
 
-function applyCalm(root: Document | Element = document): void {
-  pauseMediaElements(root)
-  if (root === document) {
-    freezeGifs(root)
-    blockNotificationPrompts()
+let observer: MutationObserver | null = null
+
+function startObserver(): void {
+  if (observer) return
+  observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof Element) {
+          pauseMedia(node)
+          freezeGifs(node)
+        }
+      }
+    }
+  })
+  observer.observe(document, { childList: true, subtree: true })
+}
+
+function stopObserver(): void {
+  if (observer) {
+    observer.disconnect()
+    observer = null
   }
 }
 
-// Watch for dynamically injected content
-const observer = new MutationObserver(mutations => {
-  for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) {
-      if (node instanceof Element) {
-        applyCalm(node)
-      }
+function activate(): void {
+  document.documentElement.classList.add('calm-web-active')
+  pauseMedia(document)
+  freezeGifs(document)
+  blockNotifications()
+  startObserver()
+}
+
+function deactivate(): void {
+  document.documentElement.classList.remove('calm-web-active')
+  stopObserver()
+}
+
+// Listen for toggle messages from background (sent when popup changes site toggle)
+chrome.runtime.onMessage.addListener((message: { type: string; enabled: boolean }) => {
+  if (message.type === 'calm-toggle') {
+    if (message.enabled) {
+      activate()
+    } else {
+      deactivate()
     }
   }
 })
 
-// Check if calm-web is enabled for this site
-chrome.storage.sync.get([CALM_STORAGE_KEY, 'allowlist'], result => {
-  const enabled = result[CALM_STORAGE_KEY] !== false
-  const allowlist: string[] = result['allowlist'] ?? [
-    'docs.google.com',
-    'sheets.google.com',
-    'slides.google.com',
-    'figma.com',
-    'github.com',
-    'notion.so',
-    'linear.app',
-  ]
+// Initial load: check global + per-site settings
+chrome.storage.sync.get(['enabled', 'sites'], result => {
+  const globalEnabled = result['enabled'] !== false
+  const sites: Record<string, boolean> = result['sites'] ?? {}
 
-  const hostname = window.location.hostname
-  if (!enabled || allowlist.some(domain => hostname === domain || hostname.endsWith('.' + domain))) {
+  if (!globalEnabled || sites[hostname] === false) {
     return
   }
 
-  applyCalm()
-  observer.observe(document, { childList: true, subtree: true })
+  activate()
 })
